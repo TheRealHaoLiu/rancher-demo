@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eks-config-operator
+  namespace: cattle-system
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      ke.cattle.io/operator: eks
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        ke.cattle.io/operator: eks
+    spec:
+      containers:
+      - image: rancher/eks-operator:v1.1.1
+        imagePullPolicy: IfNotPresent
+        name: eks-operator
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1007
+        runAsUser: 1007
+      serviceAccount: eks-operator
+      serviceAccountName: eks-operator
+      terminationGracePeriodSeconds: 30

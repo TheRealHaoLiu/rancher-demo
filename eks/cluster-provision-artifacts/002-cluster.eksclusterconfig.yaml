@@ -1,0 +1,40 @@
+apiVersion: eks.cattle.io/v1
+kind: EKSClusterConfig
+metadata:
+  name: CLUSTER_NAME
+  namespace: CLUSTER_NAME
+spec:
+  amazonCredentialSecret: CLUSTER_NAME:CLUSTER_NAME-cloud-credential
+  displayName: CLUSTER_NAME
+  imported: false
+  kmsKey: ""
+  kubernetesVersion: "1.20"
+  nodeGroups:
+  - desiredSize: 2
+    diskSize: 20
+    ec2SshKey: ""
+    gpu: false
+    imageId: null
+    instanceType: t3.medium
+    launchTemplate: null
+    maxSize: 2
+    minSize: 2
+    nodegroupName: CLUSTER_NAME-ng-1
+    requestSpotInstances: false
+    spotInstanceTypes: null
+    version: "1.20"
+    tags: {}
+    resourceTags: {}
+    subnets: []
+    labels: {}
+  privateAccess: false
+  publicAccess: true
+  publicAccessSources:
+  - 0.0.0.0/0
+  region: AWS_REGION
+  secretsEncryption: false
+  serviceRole: ""
+  tags: {}
+  subnets: []
+  securityGroups: []
+  loggingTypes: []
