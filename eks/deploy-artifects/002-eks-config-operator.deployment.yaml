@@ -20,7 +20,7 @@ spec:
         ke.cattle.io/operator: eks
     spec:
       containers:
-      - image: rancher/eks-operator:v1.1.1
+      - image: docker.io/rancher/eks-operator:v1.1.1
         imagePullPolicy: IfNotPresent
         name: eks-operator
       restartPolicy: Always

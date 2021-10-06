@@ -1,0 +1,68 @@
+#!/bin/bash
+
+DEMO_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+ROOT_DIR="$( cd ${DEMO_DIR}/.. && pwd)"
+
+. ${ROOT_DIR}/demo-magic
+
+TYPE_SPEED=30
+# PROMPT_AFTER=1
+DEMO_PROMPT="☸️ $ "
+NO_WAIT=1
+
+# function () {
+#   if [[ -n "${NO_WAIT}" ]]; then
+#     sleep 2
+#   else
+#     if [[ -n "${1-}" ]]; then
+#       sleep "$1"
+#     else
+#       
+#     fi
+#   fi
+# }
+
+function comment() {
+  echo -e '\033[0;33m>>> '$1' <<<\033[0m'
+  wait
+}
+
+comment "link to information for Rancher eks-operator"
+echo "https://github.com/rancher/eks-operator"
+
+# comment "starting Kind cluster"
+
+# pe "kind create cluster --kubeconfig=kind-rancher-eks.kubeconfig --name rancher-eks"
+# pe "export KUBECONFIG=kind-rancher-eks.kubeconfig"
+
+comment "demo cluster info"
+pe "kubectl cluster-info"
+
+# comment "deploy rancher eks-operator"
+# echo "TODO: switch to helm chart https://github.com/rancher/eks-operator/tree/master/charts"
+# echo "NOTE: OCP cluster need to adjust scc to allow anyuid"
+# pe "kubectl apply -f deploy-artifects/"
+
+CLUSTER_NAME="rancher-eks-demo"
+AWS_REGION="us-east-1"
+
+comment "Create cluster namespace $CLUSTER_NAME"
+cat cluster-provision-artifacts/000-cluster.namespace.yaml.template | sed s/CLUSTER_NAME/$CLUSTER_NAME/g | kubectl apply -f -
+
+comment "Create cloud credential secret"
+cat cluster-provision-artifacts/001-cloud-credential.secret.yaml.template | \
+  sed s/CLUSTER_NAME/$CLUSTER_NAME/g | \
+  sed s/AWS_ACCESS_KEY_ID/$AWS_ACCESS_KEY_ID/g | \
+  sed s/AWS_SECRET_ACCESS_KEY/$AWS_SECRET_ACCESS_KEY/g | \
+  sed s/AWS_REGION/$AWS_REGION/g | \
+  kubectl apply -f -
+
+comment "Create EKSClusterConfig"
+cat cluster-provision-artifacts/002-cluster.eksclusterconfig.yaml.template | \
+  sed s/CLUSTER_NAME/$CLUSTER_NAME/g | \
+  sed s/AWS_REGION/$AWS_REGION/g | \
+  kubectl apply -f -
+
+#TODO comment "Waiting for EKS cluster to finish provisioning"
+
+pe "go run ../hack/aws-generate-eks-token.go $CLUSTER_NAME"
