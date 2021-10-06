@@ -120,11 +120,16 @@ func main() {
 	eksToken := getEKSToken(clusterName)
 	// fmt.Println(eksToken)
 
+	caData, err := base64.StdEncoding.DecodeString(string(clusterSecret.Data["ca"]))
+	if err != nil {
+		panic(err.Error())
+	}
+
 	//generate kubeconfig for the eks cluster
 	clusters := make(map[string]*clientcmdapi.Cluster)
 	clusters[eks.Name] = &clientcmdapi.Cluster{
 		Server:                   string(clusterSecret.Data["endpoint"]),
-		CertificateAuthorityData: clusterSecret.Data["ca"],
+		CertificateAuthorityData: caData,
 	}
 
 	contexts := make(map[string]*clientcmdapi.Context)
