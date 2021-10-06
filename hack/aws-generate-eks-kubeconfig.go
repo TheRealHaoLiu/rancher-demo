@@ -8,6 +8,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sts"
 	"github.com/aws/aws-sdk-go/service/sts/stsiface"
@@ -117,7 +119,10 @@ func main() {
 	// fmt.Println(clusterSecret)
 	// fmt.Println(awsSecret)
 
-	eksToken := getEKSToken(clusterName)
+	eksToken, err := getEKSToken(eks, awsSecret)
+	if err != nil {
+		panic(err.Error())
+	}
 	// fmt.Println(eksToken)
 
 	caData, err := base64.StdEncoding.DecodeString(string(clusterSecret.Data["ca"]))
@@ -160,18 +165,36 @@ func main() {
 	fmt.Println(string(eksKubeConfig))
 }
 
-func getEKSToken(clusterName string) string {
-	//TODO: use cred in AWS secret instead of env var
-	stsClient := stsiface.STSAPI(sts.New(session.New()))
+func getEKSToken(eks *eksv1.EKSClusterConfig, awsSecret *corev1.Secret) (string, error) {
+	awsConfig := &aws.Config{}
+
+	if region := eks.Spec.Region; region != "" {
+		awsConfig.Region = aws.String(region)
+	}
+
+	accessKeyBytes := awsSecret.Data["amazonec2credentialConfig-accessKey"]
+	secretKeyBytes := awsSecret.Data["amazonec2credentialConfig-secretKey"]
+
+	accessKey := string(accessKeyBytes)
+	secretKey := string(secretKeyBytes)
+
+	awsConfig.Credentials = credentials.NewStaticCredentials(accessKey, secretKey, "")
+
+	sess, err := session.NewSession(awsConfig)
+	if err != nil {
+		return "", fmt.Errorf("error getting new aws session: %v", err)
+	}
+
+	stsClient := stsiface.STSAPI(sts.New(sess))
 
 	req, _ := stsClient.GetCallerIdentityRequest(&sts.GetCallerIdentityInput{})
-	req.HTTPRequest.Header.Add("x-k8s-aws-id", clusterName)
+	req.HTTPRequest.Header.Add("x-k8s-aws-id", eks.Name)
 
 	presignedURL, _ := req.Presign(15 * time.Minute)
 
 	encodedURL := base64.RawURLEncoding.EncodeToString([]byte(presignedURL))
 
-	return fmt.Sprintf("%s.%s", "k8s-aws-v1", encodedURL)
+	return fmt.Sprintf("%s.%s", "k8s-aws-v1", encodedURL), nil
 }
 
 //output kubeconfig

@@ -63,6 +63,7 @@ cat cluster-provision-artifacts/002-cluster.eksclusterconfig.yaml.template | \
   sed s/AWS_REGION/$AWS_REGION/g | \
   kubectl apply -f -
 
-#TODO comment "Waiting for EKS cluster to finish provisioning"
+comment "TODO: Waiting for EKS cluster to finish provisioning"
 
-pe "go run ../hack/aws-generate-eks-token.go $CLUSTER_NAME"
+comment "Create EKSClusterConfig"
+pe "go run ../hack/aws-generate-eks-kubeconfig $CLUSTER_NAME"

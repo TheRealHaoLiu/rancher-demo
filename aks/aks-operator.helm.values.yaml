@@ -1,0 +1,12 @@
+global:
+  systemDefaultRegistry: "docker.io"
+
+aksOperator:
+  image:
+    repository: rancher/aks-operator
+    tag: v1.0.1
+
+httpProxy: ""
+httpsProxy: ""
+noProxy: ""
+additionalTrustedCAs: false

@@ -1,0 +1,46 @@
+apiVersion: aks.cattle.io/v1
+kind: AKSClusterConfig
+metadata:
+  name: CLUSTER_NAME
+  namespace: CLUSTER_NAME
+spec:
+  authBaseUrl: null
+  authorizedIpRanges: null
+  azureCredentialSecret: CLUSTER_NAME:CLUSTER_NAME-cloud-credential
+  baseUrl: null
+  clusterName: CLUSTER_NAME
+  dnsPrefix: CLUSTER_NAME-dns
+  dnsServiceIp: null
+  dockerBridgeCidr: null
+  httpApplicationRouting: null
+  imported: false
+  kubernetesVersion: 1.21.2
+  linuxAdminUsername: azureuser
+  loadBalancerSku: Standard
+  logAnalyticsWorkspaceGroup: null
+  logAnalyticsWorkspaceName: null
+  monitoring: null
+  networkPlugin: kubenet
+  networkPolicy: null
+  nodePools:
+  - availabilityZones:
+    - "1"
+    - "2"
+    - "3"
+    count: 1
+    maxPods: 110
+    mode: System
+    name: agentpool
+    orchestratorVersion: 1.21.2
+    osDiskSizeGB: 128
+    osDiskType: Managed
+    osType: Linux
+    vmSize: Standard_DS2_v2
+  podCidr: null
+  privateCluster: false
+  resourceGroup: CLUSTER_NAME-resource-group
+  resourceLocation: eastus
+  serviceCidr: null
+  subnet: null
+  virtualNetwork: null
+  virtualNetworkResourceGroup: null

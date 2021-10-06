@@ -1,0 +1,72 @@
+#!/bin/bash
+
+DEMO_DIR="$( dirname "${BASH_SOURCE[0]}" )"
+ROOT_DIR="$( cd ${DEMO_DIR}/.. && pwd)"
+
+. ${ROOT_DIR}/demo-magic
+
+TYPE_SPEED=30
+# PROMPT_AFTER=1
+DEMO_PROMPT="☸️ $ "
+NO_WAIT=1
+
+# function () {
+#   if [[ -n "${NO_WAIT}" ]]; then
+#     sleep 2
+#   else
+#     if [[ -n "${1-}" ]]; then
+#       sleep "$1"
+#     else
+#       
+#     fi
+#   fi
+# }
+
+function comment() {
+  echo -e '\033[0;33m>>> '$1' <<<\033[0m'
+  wait
+}
+
+comment "link to information for Rancher aks-operator"
+echo "https://github.com/rancher/aks-operator"
+
+comment "cloneing aks-operator repo"
+git clone https://github.com/rancher/aks-operator.git
+
+comment "starting Kind cluster"
+
+pe "kind create cluster --kubeconfig=kind-rancher-aks.kubeconfig --name rancher-aks"
+pe "export KUBECONFIG=kind-rancher-aks.kubeconfig"
+
+comment "demo cluster info"
+pe "kubectl cluster-info"
+
+comment "deploy rancher aks-operator-crd via helm chart"
+pe "helm install rancher-aks-operator-crd -n cattle-system aks-operator/charts/aks-operator-crd"
+
+comment "deploy rancher aks-operator via helm chart"
+pe "cat aks-operator.helm.values.yaml"
+pe "helm install rancher-aks-opertor -n cattle-system aks-operator/charts/aks-operator -f aks-operator.helm.values.yaml"
+
+CLUSTER_NAME="rancher-aks-demo"
+
+comment "Create cluster namespace $CLUSTER_NAME"
+cat cluster-provision-artifacts/000-cluster.namespace.yaml.template | sed s/CLUSTER_NAME/$CLUSTER_NAME/g | kubectl apply -f -
+
+comment "Create cloud credential secret"
+cat cluster-provision-artifacts/001-cloud-credential.secret.yaml.template | \
+  sed s/CLUSTER_NAME/$CLUSTER_NAME/g | \
+  sed s/AZURE_CLIENT_ID/$AZURE_CLIENT_ID/g | \
+  sed s/AZURE_CLIENT_SECRET/$AZURE_CLIENT_SECRET/g | \
+  sed s/AZURE_SUBSCRIPTION_ID/$AZURE_SUBSCRIPTION_ID/g | \
+  sed s/AZURE_TENANT_ID/$AZURE_TENANT_ID/g | \
+  kubectl apply -f -
+
+comment "Create AKSClusterConfig"
+cat cluster-provision-artifacts/002-cluster.aksclusterconfig.yaml.template | \
+  sed s/CLUSTER_NAME/$CLUSTER_NAME/g | \
+  kubectl apply -f -
+
+comment "TODO: Waiting for cluster to finish provisioning"
+
+comment "TODO: Generate kubeconfig for the cluster"
